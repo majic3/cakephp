@@ -85,6 +85,18 @@ class PostgresTestModel extends Model {
 	var $useTable = false;
 
 /**
+ * belongsTo property
+ *
+ * @var array
+ * @access public
+ */
+	var $belongsTo = array(
+		'PostgresClientTestModel' => array(
+			'foreignKey' => 'client_id'
+		)
+	);
+
+/**
  * find method
  *
  * @param mixed $conditions
@@ -143,6 +155,47 @@ class PostgresTestModel extends Model {
 }
 
 /**
+ * PostgresClientTestModel class
+ *
+ * @package       cake
+ * @subpackage    cake.tests.cases.libs.model.datasources
+ */
+class PostgresClientTestModel extends Model {
+
+/**
+ * name property
+ *
+ * @var string 'PostgresClientTestModel'
+ * @access public
+ */
+	var $name = 'PostgresClientTestModel';
+
+/**
+ * useTable property
+ *
+ * @var bool false
+ * @access public
+ */
+	var $useTable = false;
+
+/**
+ * schema method
+ *
+ * @access public
+ * @return void
+ */
+	function schema() {
+		return array(
+			'id'		=> array('type' => 'integer', 'null' => '', 'default' => '', 'length' => '8', 'key' => 'primary'),
+			'name'		=> array('type' => 'string', 'null' => '', 'default' => '', 'length' => '255'),
+			'email'		=> array('type' => 'string', 'null' => '1', 'default' => '', 'length' => '155'),
+			'created'	=> array('type' => 'datetime', 'null' => '1', 'default' => '', 'length' => ''),
+			'updated'	=> array('type' => 'datetime', 'null' => '1', 'default' => '', 'length' => null)
+		);
+	}
+}
+
+/**
  * DboPostgresTest class
  *
  * @package       cake
@@ -166,8 +219,8 @@ class DboPostgresTest extends CakeTestCase {
  * @access public
  */
 	var $fixtures = array('core.user', 'core.binary_test', 'core.comment', 'core.article',
-		'core.tag', 'core.articles_tag', 'core.attachment', 'core.person', 'core.post', 'core.author');
-
+		'core.tag', 'core.articles_tag', 'core.attachment', 'core.person', 'core.post', 'core.author',
+	);
 /**
  * Actual DB connection used in testing
  *
@@ -227,13 +280,12 @@ class DboPostgresTest extends CakeTestCase {
 	}
 
 /**
- * Test field and value quoting method
+ * Test field quoting method
  *
  * @access public
  */
-	function testQuoting() {
-		$result = $this->db2->fields($this->model);
-		$expected = array(
+	function testFieldQuoting() {
+		$fields = array(
 			'"PostgresTestModel"."id" AS "PostgresTestModel__id"',
 			'"PostgresTestModel"."client_id" AS "PostgresTestModel__client_id"',
 			'"PostgresTestModel"."name" AS "PostgresTestModel__name"',
@@ -253,15 +305,29 @@ class DboPostgresTest extends CakeTestCase {
 			'"PostgresTestModel"."created" AS "PostgresTestModel__created"',
 			'"PostgresTestModel"."updated" AS "PostgresTestModel__updated"'
 		);
+
+		$result = $this->db->fields($this->model);
+		$expected = $fields;
 		$this->assertEqual($result, $expected);
 
-		$expected = "'1.2'";
-		$result = $this->db2->value(1.2, 'float');
-		$this->assertIdentical($expected, $result);
+		$result = $this->db->fields($this->model, null, 'PostgresTestModel.*');
+		$expected = $fields;
+		$this->assertEqual($result, $expected);
 
-		$expected = "'1,2'";
-		$result = $this->db2->value('1,2', 'float');
-		$this->assertIdentical($expected, $result);
+		$result = $this->db->fields($this->model, null, array('*', 'AnotherModel.id', 'AnotherModel.name'));
+		$expected = array_merge($fields, array(
+			'"AnotherModel"."id" AS "AnotherModel__id"',
+			'"AnotherModel"."name" AS "AnotherModel__name"'));
+		$this->assertEqual($result, $expected);
+
+		$result = $this->db->fields($this->model, null, array('*', 'PostgresClientTestModel.*'));
+		$expected = array_merge($fields, array(
+			'"PostgresClientTestModel"."id" AS "PostgresClientTestModel__id"',
+    		'"PostgresClientTestModel"."name" AS "PostgresClientTestModel__name"',
+    		'"PostgresClientTestModel"."email" AS "PostgresClientTestModel__email"',
+    		'"PostgresClientTestModel"."created" AS "PostgresClientTestModel__created"',
+    		'"PostgresClientTestModel"."updated" AS "PostgresClientTestModel__updated"'));
+		$this->assertEqual($result, $expected);
 	}
 
 /**
@@ -286,6 +352,9 @@ class DboPostgresTest extends CakeTestCase {
  * @return void
  */
 	function testValueQuoting() {
+		$this->assertIdentical($this->db2->value(1.2, 'float'), "'1.2'");
+		$this->assertEqual($this->db2->value('1,2', 'float'), "'1,2'");
+
 		$this->assertEqual($this->db2->value('0', 'integer'), "'0'");
 		$this->assertEqual($this->db2->value('', 'integer'), 'NULL');
 		$this->assertEqual($this->db2->value('', 'float'), 'NULL');
@@ -503,16 +572,23 @@ class DboPostgresTest extends CakeTestCase {
 		)');
 		$model =& ClassRegistry::init('datatypes');
 		$schema = new CakeSchema(array('connection' => 'test_suite'));
-		$result = $schema->read(array('connection' => 'test_suite'));
-		$schema->tables = $result['tables']['missing'];
+		$result = $schema->read(array(
+			'connection' => 'test_suite',
+			'models' => array('Datatype')
+		));
+		$schema->tables = array('datatypes' => $result['tables']['datatypes']);
 		$result = $db1->createSchema($schema, 'datatypes');
 		$this->assertNoPattern('/timestamp DEFAULT/', $result);
 		$this->assertPattern('/timestamp\s*,/', $result);
 
 		$db1->query('DROP TABLE ' . $db1->fullTableName('datatypes'));
+
 		$db1->query($result);
-		$result2 = $schema->read(array('connection' => 'test_suite'));
-		$schema->tables = $result2['tables']['missing'];
+		$result2 = $schema->read(array(
+			'connection' => 'test_suite',
+			'models' => array('Datatype')
+		));
+		$schema->tables = array('datatypes' => $result2['tables']['datatypes']);
 		$result2 = $db1->createSchema($schema, 'datatypes');
 		$this->assertEqual($result, $result2);
 
@@ -675,9 +751,12 @@ class DboPostgresTest extends CakeTestCase {
 		$this->db->query($this->db->dropSchema($schema1));
 	}
 
-	/**
-	* Test it is possible to use virtual field with postgresql
-	*/
+/*
+ * Test it is possible to use virtual field with postgresql
+ *
+ * @access public
+ * @return void
+ */
 	function testVirtualFields() {
 		$this->loadFixtures('Article', 'Comment');
 		$Article = new Article;
@@ -694,12 +773,26 @@ class DboPostgresTest extends CakeTestCase {
 		$this->assertEqual($result['Article']['subquery'], 6);
 	}
 
-	/**
-	* Tests additional order options for postgres
-	*/
+/**
+ * Tests additional order options for postgres
+ *
+ * @access public
+ * @return void
+ */
 	function testOrderAdditionalParams() {
 		$result = $this->db->order(array('title' => 'DESC NULLS FIRST', 'body' => 'DESC'));
 		$expected = ' ORDER BY "title" DESC NULLS FIRST, "body" DESC';
+		$this->assertEqual($result, $expected);
+	}
+
+/**
+* Test it is possible to do a SELECT COUNT(DISTINCT Model.field) query in postgres and it gets correctly quoted
+*/
+	function testQuoteDistinctInFunction() {
+		$this->loadFixtures('Article');
+		$Article = new Article;
+		$result = $this->db->fields($Article, null, array('COUNT(DISTINCT Article.id)'));
+		$expected = array('COUNT(DISTINCT "Article"."id")');
 		$this->assertEqual($result, $expected);
 	}
 }

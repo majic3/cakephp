@@ -1327,16 +1327,16 @@ class Model extends Overloadable {
 			if (!empty($this->id)) {
 				$success = (bool)$db->update($this, $fields, $values);
 			} else {
-				foreach ($this->_schema as $field => $properties) {
-					if ($this->primaryKey === $field) {
-						$fInfo = $this->_schema[$field];
-						$isUUID = ($fInfo['length'] == 36 &&
-							($fInfo['type'] === 'string' || $fInfo['type'] === 'binary')
-						);
-						if (empty($this->data[$this->alias][$this->primaryKey]) && $isUUID) {
-							list($fields[], $values[]) = array($this->primaryKey, String::uuid());
-						}
-						break;
+				$fInfo = $this->_schema[$this->primaryKey];
+				$isUUID = ($fInfo['length'] == 36 &&
+					($fInfo['type'] === 'string' || $fInfo['type'] === 'binary')
+				);
+				if (empty($this->data[$this->alias][$this->primaryKey]) && $isUUID) {
+					if (array_key_exists($this->primaryKey, $this->data[$this->alias])) {
+						$j = array_search($this->primaryKey, $fields);
+						$values[$j] = String::uuid();
+					} else {
+						list($fields[], $values[]) = array($this->primaryKey, String::uuid());
 					}
 				}
 
@@ -1429,10 +1429,12 @@ class Model extends Overloadable {
 				}
 
 				if ($this->hasAndBelongsToMany[$assoc]['unique']) {
-					$conditions = array_merge(
-						array($join . '.' . $this->hasAndBelongsToMany[$assoc]['foreignKey'] => $id),
-						(array)$this->hasAndBelongsToMany[$assoc]['conditions']
+					$conditions = array(
+						$join . '.' . $this->hasAndBelongsToMany[$assoc]['foreignKey'] => $id
 					);
+					if (!empty($this->hasAndBelongsToMany[$assoc]['conditions'])) {
+						$conditions = array_merge($conditions, (array)$this->hasAndBelongsToMany[$assoc]['conditions']);
+					}
 					$links = $this->{$join}->find('all', array(
 						'conditions' => $conditions,
 						'recursive' => empty($this->hasAndBelongsToMany[$assoc]['conditions']) ? -1 : 0,
@@ -1456,7 +1458,7 @@ class Model extends Overloadable {
 				}
 
 				if (!empty($newValues)) {
-					$fields =  implode(',', $fields);
+					$fields = implode(',', $fields);
 					$db->insertMulti($this->{$join}, $fields, $newValues);
 				}
 			}
@@ -1554,9 +1556,9 @@ class Model extends Overloadable {
  *
  * #### Options
  *
- * - validate: Set to false to disable validation, true to validate each record before
- *   saving, 'first' to validate *all* records before any are saved, or 'only' to only
- *   validate the records, but not save them.
+ * - validate: Set to false to disable validation, true to validate each record before saving,
+ *   'first' to validate *all* records before any are saved (default),
+ *   or 'only' to only validate the records, but not save them.
  * - atomic: If true (default), will attempt to save all records in a single transaction.
  *   Should be set to false if database/table does not support transactions.
  * - fieldList: Equivalent to the $fieldList parameter in Model::save()
@@ -1577,10 +1579,15 @@ class Model extends Overloadable {
 		}
 		$db =& ConnectionManager::getDataSource($this->useDbConfig);
 
-		$options = array_merge(array('validate' => true, 'atomic' => true), $options);
+		$options = array_merge(array('validate' => 'first', 'atomic' => true), $options);
 		$this->validationErrors = $validationErrors = array();
 		$validates = true;
 		$return = array();
+
+		if (empty($data) && $options['validate'] !== false) {
+			$result = $this->save($data, $options);
+			return !empty($result);
+		}
 
 		if ($options['atomic'] && $options['validate'] !== 'only') {
 			$db->begin($this);
@@ -1619,6 +1626,7 @@ class Model extends Overloadable {
 					break;
 					case ($options['validate'] === 'first'):
 						$options['validate'] = true;
+						$return = array();
 						continue;
 					break;
 					default:
@@ -1724,6 +1732,7 @@ class Model extends Overloadable {
 				break;
 				case ($options['validate'] === 'first'):
 					$options['validate'] = true;
+					$return = array();
 					continue;
 				break;
 				default:
@@ -1840,7 +1849,7 @@ class Model extends Overloadable {
 				$model =& $this->{$assoc};
 				$conditions = array($model->escapeField($data['foreignKey']) => $id);
 				if ($data['conditions']) {
-					$conditions = array_merge($data['conditions'], $conditions);
+					$conditions = array_merge((array)$data['conditions'], $conditions);
 				}
 				$model->recursive = -1;
 
@@ -2665,7 +2674,7 @@ class Model extends Overloadable {
 	}
 
 /**
- * Escapes the field name and prepends the model name. Escaping is done according to the 
+ * Escapes the field name and prepends the model name. Escaping is done according to the
  * current database driver's rules.
  *
  * @param string $field Field to escape (e.g: id)
@@ -2681,7 +2690,7 @@ class Model extends Overloadable {
 			$field = $this->primaryKey;
 		}
 		$db =& ConnectionManager::getDataSource($this->useDbConfig);
-		if (strpos($field, $db->name($alias)) === 0) {
+		if (strpos($field, $db->name($alias) . '.') === 0) {
 			return $field;
 		}
 		return $db->name($alias . '.' . $field);

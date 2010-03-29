@@ -497,7 +497,7 @@ class Router {
 			}
 		}
 
-		if (!empty($ext)) {
+		if (!empty($ext) && !isset($out['url']['ext'])) {
 			$out['url']['ext'] = $ext;
 		}
 		return $out;
@@ -1047,9 +1047,11 @@ class Router {
 	}
 
 /**
- * Normalizes a URL for purposes of comparison
+ * Normalizes a URL for purposes of comparison.  Will strip the base path off
+ * and replace any double /'s.  It will not unify the casing and underscoring
+ * of the input value.
  *
- * @param mixed $url URL to normalize
+ * @param mixed $url URL to normalize Either an array or a string url.
  * @return string Normalized URL
  * @access public
  * @static
