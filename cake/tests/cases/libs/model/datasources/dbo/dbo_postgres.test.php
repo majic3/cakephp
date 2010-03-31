@@ -375,6 +375,7 @@ class DboPostgresTest extends CakeTestCase {
 		$this->assertEqual($this->db2->value(1, 'boolean'), 'TRUE');
 		$this->assertEqual($this->db2->value('1', 'boolean'), 'TRUE');
 		$this->assertEqual($this->db2->value(null, 'boolean'), "NULL");
+		$this->assertEqual($this->db2->value(array()), "NULL");
 	}
 
 /**
@@ -655,7 +656,7 @@ class DboPostgresTest extends CakeTestCase {
 			'alter_posts' => array(
 				'id' => array('type' => 'integer', 'key' => 'primary'),
 				'author_id' => array('type' => 'integer', 'null' => true),
-				'title' => array('type' => 'string', 'null' => false),
+				'title' => array('type' => 'string', 'null' => false, 'default' => 'my title'),
 				'body' => array('type' => 'string', 'length' => 500),
 				'status' => array('type' => 'integer', 'length' => 3, 'default' => 1),
 				'created' => array('type' => 'datetime'),

@@ -286,7 +286,7 @@ class DboPostgres extends DboSource {
 			return $parent;
 		}
 
-		if ($data === null) {
+		if ($data === null || (is_array($data) && empty($data))) {
 			return 'NULL';
 		}
 		if (empty($column)) {
@@ -600,7 +600,7 @@ class DboPostgres extends DboSource {
 								}
 
 								if (isset($default)) {
-									$colList[] = 'ALTER COLUMN '. $fieldName .'  SET DEFAULT ' . $default;
+									$colList[] = 'ALTER COLUMN '. $fieldName .'  SET DEFAULT ' . $this->value($default, $col['type']);
 								} else {
 									$colList[] = 'ALTER COLUMN '. $fieldName .'  DROP DEFAULT';
 								}
