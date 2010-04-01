@@ -2,3 +2,5 @@ added
  * rewritebase to htaccess's
  * php5 htaccess add type for mt or 1&1 servers
  * cake console needs to be php5 for commandline php on mt
+ * rewritebase to htaccess's & php5 addtype to libs/skel
+ * commented out rewritebase
