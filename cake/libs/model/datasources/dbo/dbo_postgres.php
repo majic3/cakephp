@@ -231,7 +231,12 @@ class DboPostgres extends DboSource {
 					if (!empty($c['char_length'])) {
 						$length = intval($c['char_length']);
 					} elseif (!empty($c['oct_length'])) {
-						$length = intval($c['oct_length']);
+						if ($c['type'] == 'character varying') {
+							$length = null;
+							$c['type'] = 'text';
+						} else {
+							$length = intval($c['oct_length']);
+						}
 					} else {
 						$length = $this->length($c['type']);
 					}
@@ -493,7 +498,7 @@ class DboPostgres extends DboSource {
 			$match[1] = trim(str_replace('DISTINCT', '', $match[1]));
 		}
 		if (strpos($match[1], '.') === false) {
-			$match[1] = $this->name($alias . '.' . $match[1]);
+			$match[1] = $this->name($match[1]);
 		} else {
 			$parts = explode('.', $match[1]);
 			if (!Set::numeric($parts)) {

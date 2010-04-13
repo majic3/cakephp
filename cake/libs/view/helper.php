@@ -182,6 +182,7 @@ class Helper extends Overloadable {
  * @param boolean $full If true, the full base URL will be prepended to the result
  * @return string  Full translated URL with base path.
  * @access public
+ * @link http://book.cakephp.org/view/1448/url
  */
 	function url($url = null, $full = false) {
 		return h(Router::url($url, $full));
@@ -244,7 +245,8 @@ class Helper extends Overloadable {
 			Configure::read('Asset.timestamp') === 'force'
 		);
 		if (strpos($path, '?') === false && $timestampEnabled) {
-			$path .= '?' . @filemtime(WWW_ROOT . str_replace('/', DS, $path));
+			$filepath = preg_replace('/^' . preg_quote($this->webroot, '/') . '/', '', $path);
+			$path .= '?' . @filemtime(WWW_ROOT . str_replace('/', DS, $filepath));
 		}
 		return $path;
 	}

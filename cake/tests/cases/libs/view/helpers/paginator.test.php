@@ -218,7 +218,6 @@ class PaginatorHelperTest extends CakeTestCase {
 		$this->assertPattern('/\/accounts\/index\/param\/page:1\/sort:title\/direction:desc" class="asc">Title<\/a>$/', $result);
 	}
 
-
 /**
  * testSortLinksUsingDirectionOption method
  *

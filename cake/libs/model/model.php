@@ -41,7 +41,7 @@ if (!class_exists('Overloadable')) {
  *
  * @package       cake
  * @subpackage    cake.cake.libs.model
- * @link          http://book.cakephp.org/view/66/Models
+ * @link          http://book.cakephp.org/view/1000/Models
  */
 class Model extends Overloadable {
 
@@ -177,14 +177,6 @@ class Model extends Overloadable {
  * @access public
  */
 	var $logTransactions = false;
-
-/**
- * Whether or not to enable transactions for this model (i.e. BEGIN/COMMIT/ROLLBACK statements)
- *
- * @var boolean
- * @access public
- */
-	var $transactional = false;
 
 /**
  * Whether or not to cache queries for this model.  This enables in-memory
