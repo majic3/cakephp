@@ -4,3 +4,4 @@ added
  * cake console needs to be php5 for commandline php on mt (php => php5)
  * rewritebase to htaccess's & php5 addtype to libs/skel
  * commented out rewritebase
+ * version 1.3.1
