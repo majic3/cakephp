@@ -29,3 +29,4 @@ SET lib=%~dp0
 php5 -q "%lib%cake.php" -working "%CD%" %*
 
 echo.
+
