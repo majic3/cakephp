@@ -54,8 +54,7 @@ class TemplateTask extends Shell {
 	function _findThemes() {
 		$paths = App::path('shells');
 		$core = array_pop($paths);
-		$separator = DS === '/' ? '/' : '\\\\';
-		$core = preg_replace('#libs' . $separator . '$#', '', $core);
+		$core = preg_replace('#libs' . DS . '$#', '', $core);
 		$paths[] = $core;
 		$Folder =& new Folder($core . 'templates' . DS . 'default');
 		$contents = $Folder->read();
