@@ -35,8 +35,7 @@ class ThemeView extends View {
 /**
  * Constructor for ThemeView sets $this->theme.
  *
- * @param Controller $controller Controller object to be rendered.
- * @param boolean $register Should the view be registered in the registry.
+ * @param Controller $controller
  */
 	function __construct(&$controller, $register = true) {
 		parent::__construct($controller, $register);
@@ -46,7 +45,7 @@ class ThemeView extends View {
 /**
  * Return all possible paths to find view files in order
  *
- * @param string $plugin The name of the plugin views are being found for.
+ * @param string $plugin
  * @param boolean $cached Set to true to force dir scan.
  * @return array paths
  * @access protected
