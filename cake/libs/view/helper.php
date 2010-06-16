@@ -296,10 +296,9 @@ class Helper extends Overloadable {
  *
  * And its value is one of:
  *
- * - '1' (string)
- * - 1 (integer)
- * - true (boolean)
- * - 'true' (string)
+ * - 1
+ * - true
+ * - 'true'
  *
  * Then the value will be reset to be identical with key's name.
  * If the value is not one of these 3, the parameter is not output.
@@ -359,7 +358,7 @@ class Helper extends Overloadable {
 		}
 
 		if (in_array($key, $minimizedAttributes)) {
-			if ($value === 1 || $value === true || $value === 'true' || $value === '1' || $value == $key) {
+			if ($value === 1 || $value === true || $value === 'true' || $value == $key) {
 				$attribute = sprintf($attributeFormat, $key, $key);
 			}
 		} else {
