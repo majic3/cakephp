@@ -4740,6 +4740,58 @@ class ModelReadTest extends BaseModelTest {
 	}
 
 /**
+ * test that calling unbindModel() with reset == true multiple times 
+ * leaves associations in the correct state.
+ *
+ * @return void
+ */
+	function testUnbindMultipleTimesResetCorrectly() {
+		$this->loadFixtures('User', 'Comment', 'Article');
+		$TestModel =& new Article10();
+
+		$TestModel->unbindModel(array('hasMany' => array('Comment')));
+		$TestModel->unbindModel(array('hasMany' => array('Comment')));
+		$TestModel->resetAssociations();
+
+		$this->assertTrue(isset($TestModel->hasMany['Comment']), 'Association permanently removed');
+	}
+
+/**
+ * testBindMultipleTimes method with different reset settings
+ *
+ * @access public
+ * @return void
+ */
+	function testUnBindMultipleTimesWithDifferentResetSettings() {
+		$this->loadFixtures('User', 'Comment', 'Article');
+		$TestModel =& new Comment();
+
+		$result = array_keys($TestModel->belongsTo);
+		$expected = array('Article', 'User');
+		$this->assertEqual($result, $expected);
+
+		$result = $TestModel->unbindModel(array(
+			'belongsTo' => array('User')
+		));
+		$this->assertTrue($result);
+		$result = $TestModel->unbindModel(
+			array('belongsTo' => array('Article')),
+			false
+		);
+		$this->assertTrue($result);
+
+		$result = array_keys($TestModel->belongsTo);
+		$expected = array();
+		$this->assertEqual($result, $expected);
+
+		$TestModel->resetAssociations();
+
+		$result = array_keys($TestModel->belongsTo);
+		$expected = array('User');
+		$this->assertEqual($result, $expected);
+	}
+
+/**
  * testAssociationAfterFind method
  *
  * @access public
