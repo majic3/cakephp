@@ -615,8 +615,7 @@ class Dispatcher extends Object {
  */
 	function _deliverAsset($assetFile, $ext) {
 		$ob = @ini_get("zlib.output_compression") !== '1' && extension_loaded("zlib") && (strpos(env('HTTP_ACCEPT_ENCODING'), 'gzip') !== false);
-		$compressionEnabled = $ob && Configure::read('Asset.compress');
-		if ($compressionEnabled) {
+		if ($ob && Configure::read('Asset.compress')) {
 			ob_start();
 			ob_start('ob_gzhandler');
 		}
@@ -643,13 +642,10 @@ class Dispatcher extends Object {
 		if ($ext === 'css' || $ext === 'js') {
 			include($assetFile);
 		} else {
-			if ($compressionEnabled) {
-				ob_clean();
-			}
 			readfile($assetFile);
 		}
 
-		if ($compressionEnabled) {
+		if (Configure::read('Asset.compress')) {
 			ob_end_flush();
 		}
 	}
