@@ -4721,6 +4721,57 @@ class ModelReadTest extends BaseModelTest {
 	}
 
 /**
+ * test that multiple reset = true calls to bindModel() result in the original associations.
+ *
+ * @return void
+ */
+	function testBindModelMultipleTimesResetCorrectly() {
+		$this->loadFixtures('User', 'Comment', 'Article');
+		$TestModel =& new User();
+
+		$TestModel->bindModel(array('hasMany' => array('Comment')));
+		$TestModel->bindModel(array('hasMany' => array('Comment')));
+		$TestModel->resetAssociations();
+
+		$this->assertFalse(isset($TestModel->hasMany['Comment']), 'Association left behind');
+	}
+
+/**
+ * testBindMultipleTimes method with different reset settings
+ *
+ * @access public
+ * @return void
+ */
+	function testBindMultipleTimesWithDifferentResetSettings() {
+		$this->loadFixtures('User', 'Comment', 'Article');
+		$TestModel =& new User();
+
+		$result = $TestModel->hasMany;
+		$expected = array();
+		$this->assertEqual($result, $expected);
+
+		$result = $TestModel->bindModel(array(
+			'hasMany' => array('Comment')
+		));
+		$this->assertTrue($result);
+		$result = $TestModel->bindModel(
+			array('hasMany' => array('Article')),
+			false
+		);
+		$this->assertTrue($result);
+
+		$result = array_keys($TestModel->hasMany);
+		$expected = array('Comment', 'Article');
+		$this->assertEqual($result, $expected);
+
+		$TestModel->resetAssociations();
+
+		$result = array_keys($TestModel->hasMany);
+		$expected = array('Article');
+		$this->assertEqual($result, $expected);
+	}
+
+/**
  * test that bindModel behaves with Custom primary Key associations
  *
  * @return void
